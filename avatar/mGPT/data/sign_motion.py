@@ -22,20 +22,39 @@ FACE = "face_keypoints_3d"
 
 def find_dataset_root(root: str | Path) -> Path:
     root = Path(root)
-    if (root / "2.형태소_비수지(json)_TL").exists():
-        return root
-    candidates = list(root.rglob("2.*json*"))
-    if not candidates:
-        raise FileNotFoundError(f"Could not find sign JSON directory below {root}")
-    return candidates[0].parent
+    if not root.exists():
+        raise FileNotFoundError(f"Data root does not exist: {root}")
+    # Do not depend on Korean directory names: they can be renamed or appear
+    # mojibake on Linux mounts.  Find a JSON whose schema identifies this data.
+    for path in root.rglob("*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if isinstance(data, dict) and "landmarks" in data and "sign_script" in data:
+            return path.parent.parent
+    raise FileNotFoundError(
+        f"Could not find sign JSON files containing landmarks/sign_script below {root}. "
+        "Check --data-root and confirm the JSON files were copied.")
 
 
 def json_dir(root: str | Path) -> Path:
     root = find_dataset_root(root)
-    candidates = [p for p in root.iterdir() if p.is_dir() and len(list(p.glob("*.json"))) > 0]
+    candidates = []
+    for directory in [root, *[p for p in root.rglob("*") if p.is_dir()]]:
+        valid = 0
+        for path in directory.glob("*.json"):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                continue
+            if isinstance(data, dict) and "landmarks" in data and "sign_script" in data:
+                valid += 1
+        if valid:
+            candidates.append((valid, directory))
     if not candidates:
-        raise FileNotFoundError(f"Could not find JSON files below {root}")
-    return max(candidates, key=lambda p: len(list(p.glob("*.json"))))
+        raise FileNotFoundError(f"Could not find sign JSON files below {root}")
+    return max(candidates, key=lambda item: item[0])[1]
 
 
 def feature_keys(include_face: bool = False) -> list[str]:
