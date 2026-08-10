@@ -21,7 +21,6 @@
 | `metrics.py` | WER, Exact Match, token-F1, BLEU/chrF |
 | `train.py` | SFT / LoRA 학습 |
 | `inference.py` | 추론 (LoRA 어댑터 병합 포함) |
-| `smoke_test.py` | 본 학습 전 6단계 배선 검증 |
 | `config.py` | 하이퍼파라미터 기본값 |
 
 ---
