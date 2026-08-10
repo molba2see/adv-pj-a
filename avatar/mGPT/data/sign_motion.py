@@ -8,6 +8,7 @@ or, optionally, the face landmarks as well.
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 from typing import Iterable
 
@@ -79,10 +80,17 @@ def load_keypoints(path: str | Path, include_face: bool = False) -> np.ndarray:
 
 
 def iter_segments(root: str | Path, include_face: bool = False) -> Iterable[dict]:
+    skipped = 0
     for path in sorted(json_dir(root).glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         fps = float(data.get("metadata", {}).get("video_fps", 30.0))
-        motion = load_keypoints(path, include_face)
+        try:
+            motion = load_keypoints(path, include_face)
+        except ValueError as exc:
+            # The released data may contain both *_keypoints_2d and
+            # *_keypoints_3d JSONs.  Do not mix coordinate systems silently.
+            skipped += 1
+            continue
         for index, item in enumerate(data.get("sign_script", {}).get("sign_gestures_both", []) or []):
             gloss = item.get("gloss_id")
             if not gloss:
@@ -93,6 +101,12 @@ def iter_segments(root: str | Path, include_face: bool = False) -> Iterable[dict
             hi = max(lo + 1, min(len(motion), round(end * fps)))
             yield {"id": path.stem, "segment_index": index, "gloss": str(gloss),
                    "fps": fps, "motion": motion[lo:hi]}
+    if skipped:
+        warnings.warn(
+            f"Skipped {skipped} JSON files without the requested 3D landmark tiers. "
+            "2D and 3D keypoints are intentionally not mixed.",
+            RuntimeWarning,
+        )
 
 
 def compute_stats(root: str | Path, include_face: bool = False) -> tuple[np.ndarray, np.ndarray]:
