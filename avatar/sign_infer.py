@@ -36,8 +36,9 @@ def main():
     if not ids: raise RuntimeError("The model generated no motion tokens")
     with torch.no_grad(): out = vae.decode(torch.tensor(ids, device=d)[None]).squeeze(0).cpu().numpy()
     out = out * stats["std"] + stats["mean"]
-    np.save(a.out, out.reshape(out.shape[0], -1, 3).astype(np.float32))
-    print(f"saved {a.out}: {out.shape[0]} frames x {out.shape[1] // 3} keypoints")
+    coord_dim = vc.get("coordinate_dim", 3)
+    np.save(a.out, out.reshape(out.shape[0], -1, coord_dim).astype(np.float32))
+    print(f"saved {a.out}: {out.shape[0]} frames x {out.shape[1] // coord_dim} keypoints x {coord_dim}D")
 
 
 if __name__ == "__main__": main()

@@ -44,3 +44,7 @@ python sign_infer.py `
 
 The output is a float32 NumPy array shaped `(frames, keypoints, 3)`. The
 coordinates are de-normalized back to the source keypoint coordinate system.
+
+For the supplied data, most JSON files contain 2D landmarks. Train a separate
+2D model with `--landmark-dim 2d` on both tokenizer and LoRA commands. Its
+output is shaped `(frames, keypoints, 2)`.

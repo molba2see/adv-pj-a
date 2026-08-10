@@ -58,34 +58,42 @@ def json_dir(root: str | Path) -> Path:
     return max(candidates, key=lambda item: item[0])[1]
 
 
-def feature_keys(include_face: bool = False) -> list[str]:
-    return [POSE, LEFT_HAND, RIGHT_HAND] + ([FACE] if include_face else [])
+def feature_keys(include_face: bool = False, landmark_dim: str = "3d") -> list[str]:
+    suffix = "3d" if landmark_dim == "3d" else "2d"
+    return [f"{POSE[:-2]}{suffix}", f"{LEFT_HAND[:-2]}{suffix}",
+            f"{RIGHT_HAND[:-2]}{suffix}"] + (
+                [f"{FACE[:-2]}{suffix}"] if include_face else [])
 
 
-def load_keypoints(path: str | Path, include_face: bool = False) -> np.ndarray:
+def load_keypoints(path: str | Path, include_face: bool = False,
+                   landmark_dim: str = "3d") -> np.ndarray:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     landmarks = data.get("landmarks", {})
     arrays = []
     frame_count = None
-    for key in feature_keys(include_face):
+    if landmark_dim not in {"2d", "3d"}:
+        raise ValueError(f"landmark_dim must be 2d or 3d, got {landmark_dim}")
+    for key in feature_keys(include_face, landmark_dim):
         values = landmarks.get(key)
         if not isinstance(values, list) or not values:
             raise ValueError(f"{path} is missing non-empty landmark tier {key}")
         arr = np.asarray(values, dtype=np.float32)
-        if arr.ndim != 2 or arr.shape[1] % 3 != 0:
+        coord_dim = 3 if landmark_dim == "3d" else 2
+        if arr.ndim != 2 or arr.shape[1] % coord_dim != 0:
             raise ValueError(f"Unexpected shape for {key} in {path}: {arr.shape}")
         frame_count = arr.shape[0] if frame_count is None else min(frame_count, arr.shape[0])
         arrays.append(arr)
     return np.concatenate([a[:frame_count] for a in arrays], axis=1)
 
 
-def iter_segments(root: str | Path, include_face: bool = False) -> Iterable[dict]:
+def iter_segments(root: str | Path, include_face: bool = False,
+                  landmark_dim: str = "3d") -> Iterable[dict]:
     skipped = 0
     for path in sorted(json_dir(root).glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         fps = float(data.get("metadata", {}).get("video_fps", 30.0))
         try:
-            motion = load_keypoints(path, include_face)
+            motion = load_keypoints(path, include_face, landmark_dim)
         except ValueError as exc:
             # The released data may contain both *_keypoints_2d and
             # *_keypoints_3d JSONs.  Do not mix coordinate systems silently.
@@ -104,16 +112,17 @@ def iter_segments(root: str | Path, include_face: bool = False) -> Iterable[dict
     if skipped:
         warnings.warn(
             f"Skipped {skipped} JSON files without the requested 3D landmark tiers. "
-            "2D and 3D keypoints are intentionally not mixed.",
+            f"{landmark_dim.upper()} and other keypoints are intentionally not mixed.",
             RuntimeWarning,
         )
 
 
-def compute_stats(root: str | Path, include_face: bool = False) -> tuple[np.ndarray, np.ndarray]:
+def compute_stats(root: str | Path, include_face: bool = False,
+                  landmark_dim: str = "3d") -> tuple[np.ndarray, np.ndarray]:
     total = 0
     sum_x = None
     sum_x2 = None
-    for row in iter_segments(root, include_face):
+    for row in iter_segments(root, include_face, landmark_dim):
         x = row["motion"].reshape(-1, row["motion"].shape[-1]).astype(np.float64)
         sum_x = x.sum(0) if sum_x is None else sum_x + x.sum(0)
         sum_x2 = (x * x).sum(0) if sum_x2 is None else sum_x2 + (x * x).sum(0)

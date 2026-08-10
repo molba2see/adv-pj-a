@@ -50,6 +50,7 @@ def main():
     p.add_argument("--data-root", required=True); p.add_argument("--vqvae", required=True)
     p.add_argument("--model-path", required=True, help="local T5/Flan-T5 directory")
     p.add_argument("--out", required=True); p.add_argument("--include-face", action="store_true")
+    p.add_argument("--landmark-dim", choices=["2d", "3d"], default="3d")
     p.add_argument("--max-frames", type=int, default=128); p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--batch-size", type=int, default=4); p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--device", default="cuda"); args = p.parse_args()
@@ -59,7 +60,7 @@ def main():
     vae = VQVae(nfeats=cfg["nfeats"], code_num=cfg["code_num"], code_dim=512,
                 output_emb_width=512, down_t=3, stride_t=2, width=512, depth=3).to(device)
     vae.load_state_dict(torch.load(Path(args.vqvae) / "pytorch_model.bin", map_location=device)); vae.eval()
-    rows = list(iter_segments(args.data_root, args.include_face))
+    rows = list(iter_segments(args.data_root, args.include_face, args.landmark_dim))
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, legacy=True)
     motion_tokens = [f"<motion_id_{i}>" for i in range(cfg["code_num"] + 2)]
     tokenizer.add_tokens(motion_tokens)

@@ -38,6 +38,7 @@ def main():
     p.add_argument("--data-root", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--include-face", action="store_true")
+    p.add_argument("--landmark-dim", choices=["2d", "3d"], default="3d")
     p.add_argument("--max-frames", type=int, default=128)
     p.add_argument("--epochs", type=int, default=100)
     p.add_argument("--batch-size", type=int, default=32)
@@ -49,8 +50,10 @@ def main():
     if args.max_frames % 8:
         raise ValueError("--max-frames must be divisible by 8 for the default tokenizer")
 
-    rows = list(iter_segments(args.data_root, args.include_face))
-    mean, std = compute_stats(args.data_root, args.include_face)
+    rows = list(iter_segments(args.data_root, args.include_face, args.landmark_dim))
+    mean, std = compute_stats(args.data_root, args.include_face, args.landmark_dim)
+    if not rows:
+        raise RuntimeError(f"No {args.landmark_dim} sign segments found")
     ds = SignDataset(rows, mean, std, args.max_frames)
     loader = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
     model = VQVae(nfeats=mean.size, code_num=args.code_num, code_dim=512,
@@ -78,7 +81,9 @@ def main():
     torch.save(model.state_dict(), out / "pytorch_model.bin")
     np.savez(out / "stats.npz", mean=mean, std=std)
     (out / "config.json").write_text(json.dumps({"nfeats": int(mean.size), "code_num": args.code_num,
-        "include_face": args.include_face, "max_frames": args.max_frames}, indent=2), encoding="utf-8")
+        "include_face": args.include_face, "landmark_dim": args.landmark_dim,
+        "coordinate_dim": 3 if args.landmark_dim == "3d" else 2,
+        "max_frames": args.max_frames}, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__": main()
