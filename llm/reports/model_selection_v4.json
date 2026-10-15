@@ -1,0 +1,144 @@
+{
+  "evaluation_date": "2026-08-21",
+  "service_integration_in_scope": false,
+  "primary_metric": "token_f1",
+  "review_authority": {
+    "conflict_review": "ai_assisted_not_expert",
+    "grammar_review": "heuristic_not_expert",
+    "expert_confirmation_recommended": true
+  },
+  "data": {
+    "source_version": "ksl_unified_raw_human_v2",
+    "candidate_version": "ksl_unified_group_balanced_v4",
+    "source_train_rows": 21649,
+    "candidate_train_rows": 21037,
+    "train_rows_removed": 612,
+    "capped_train_groups": 163,
+    "max_references_per_train_group": 3,
+    "valid_rows": 2576,
+    "test_rows": 2802,
+    "heldout_core_unchanged": true,
+    "split_group_intersections": 0
+  },
+  "gksl": {
+    "baseline_model": "pko_t5_base_ksl_v2_gksl_adapter_v1",
+    "candidate_model": "pko_t5_base_ksl_gksl_group_balanced_v4",
+    "baseline_multiref": {
+      "samples": 142,
+      "gloss_wer": 0.4602,
+      "exact_match": 0.3028,
+      "token_f1": 0.6589
+    },
+    "candidate_multiref": {
+      "samples": 142,
+      "gloss_wer": 0.4577,
+      "exact_match": 0.2958,
+      "token_f1": 0.657
+    },
+    "decision": "reject",
+    "reason": "WER improved slightly, but primary token_f1 and exact_match decreased"
+  },
+  "nikl_2024": {
+    "baseline_model": "pko_t5_base_ksl_v2_nikl_weighted_adapter_v1",
+    "candidate_model": "pko_t5_base_ksl_nikl_2024_adapter_v4",
+    "decode": "repeat_safe",
+    "baseline_single_reference": {
+      "samples": 90,
+      "gloss_wer": 0.8643,
+      "exact_match": 0.0333,
+      "token_f1": 0.278
+    },
+    "candidate_single_reference": {
+      "samples": 90,
+      "gloss_wer": 0.8462,
+      "exact_match": 0.0556,
+      "token_f1": 0.3071,
+      "empty_outputs": 0,
+      "triple_repeats": 0,
+      "over_2x_reference": 0,
+      "convention_mismatches": 4,
+      "expected_unnumbered_reference_exceptions": 3,
+      "unexpected_convention_mismatches": 1
+    },
+    "baseline_multiref": {
+      "samples": 85,
+      "multi_reference_groups": 2,
+      "gloss_wer": 0.863,
+      "exact_match": 0.0353,
+      "token_f1": 0.2944
+    },
+    "candidate_multiref": {
+      "samples": 85,
+      "multi_reference_groups": 2,
+      "gloss_wer": 0.8435,
+      "exact_match": 0.0588,
+      "token_f1": 0.3173
+    },
+    "paired_bootstrap": {
+      "iterations": 10000,
+      "test_unique_inputs": {
+        "samples": 85,
+        "wer_delta": -0.019549,
+        "wer_delta_95ci": [
+          -0.037093,
+          -0.001618
+        ],
+        "token_f1_delta": 0.02294,
+        "token_f1_delta_95ci": [
+          -0.001408,
+          0.054368
+        ],
+        "report": "pko_t5_base_ksl_nikl_2024_adapter_v4/paired_bootstrap_vs_v2.json"
+      },
+      "valid_inputs": {
+        "samples": 96,
+        "wer_delta": -0.001401,
+        "wer_delta_95ci": [
+          -0.024837,
+          0.020578
+        ],
+        "token_f1_delta": 0.020554,
+        "token_f1_delta_95ci": [
+          0.0009,
+          0.042275
+        ],
+        "report": "pko_t5_base_ksl_nikl_2024_adapter_v4/paired_bootstrap_valid_vs_v2.json"
+      }
+    },
+    "decision": "accept_for_2024_only",
+    "reason": "all point metrics improved; paired bootstrap supports test WER and independent-valid token_f1 improvements"
+  },
+  "grammar_reranker": {
+    "report": "grammar_reranker_experiment_v4.json",
+    "baseline_likely_relevant_top1": 47,
+    "heuristic_likely_relevant_top1": 51,
+    "changed_top_candidate": 10,
+    "decision": "experiment_only_do_not_enable",
+    "reason": "no expert labels; evaluation uses the same heuristic signals as ranking"
+  },
+  "grammar_proxy_review": {
+    "authority": "heuristic_proxy_not_expert",
+    "source": "pko_t5_base_ksl_nikl_2024_adapter_v4/ksl_grammar_check.py",
+    "scope": "181 paired valid/test rows",
+    "rule_flag_counts": {
+      "reference": 27,
+      "v2": 15,
+      "v4": 18
+    },
+    "changed_output_triage": {
+      "v4_supported": 38,
+      "v2_supported": 23,
+      "metric_grammar_conflict": 6
+    },
+    "decision": "review_triage_only_keep_v4_router",
+    "automatic_gloss_rewrite": false,
+    "training_target_use": false,
+    "reason": "rules also flag human references and include POS/boundary false positives"
+  },
+  "router_changed": true,
+  "selected_models": {
+    "2024": "pko_t5_base_ksl_nikl_2024_adapter_v4",
+    "2025": "pko_t5_base_ksl_v2_nikl_weighted_adapter_v1",
+    "gksl": "pko_t5_base_ksl_v2_gksl_adapter_v1"
+  }
+}

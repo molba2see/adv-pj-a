@@ -1,0 +1,10 @@
+{
+  "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": {
+    "samples": 90,
+    "gloss_wer": 1.9608,
+    "exact_match": 0.0444,
+    "token_f1": 0.2177,
+    "pred_len": 15.2222,
+    "ref_len": 7.3667
+  }
+}

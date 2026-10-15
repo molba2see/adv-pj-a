@@ -12,7 +12,7 @@ PDF 추출본의 구조적 특징 (실제 파일 확인 결과):
   * 표/그림 캡션: "<표 2-10> ...", "<그림 2-4> ..."
 
 사용법:
-    python prepare_grammar.py \
+    python -m data_processing.prepare_grammar \
         --input /mnt/user-data/uploads/한국수어_문법_텍스트.txt \
         --output data/grammar_chunks.jsonl
 """

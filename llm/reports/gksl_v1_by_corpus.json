@@ -1,0 +1,34 @@
+{
+  "KETI-Airport": {
+    "samples": 35,
+    "gloss_wer": 0.5538,
+    "exact_match": 0.1429,
+    "token_f1": 0.6137,
+    "pred_len": 3.3143,
+    "ref_len": 3.7143
+  },
+  "KETI-Daily": {
+    "samples": 58,
+    "gloss_wer": 0.4828,
+    "exact_match": 0.2759,
+    "token_f1": 0.6672,
+    "pred_len": 3.1034,
+    "ref_len": 3.5
+  },
+  "KETI-Emergency": {
+    "samples": 8,
+    "gloss_wer": 0.4595,
+    "exact_match": 0,
+    "token_f1": 0.6391,
+    "pred_len": 3.875,
+    "ref_len": 4.625
+  },
+  "NIA-2020": {
+    "samples": 144,
+    "gloss_wer": 0.4965,
+    "exact_match": 0.1528,
+    "token_f1": 0.5836,
+    "pred_len": 2.7569,
+    "ref_len": 2.9375
+  }
+}

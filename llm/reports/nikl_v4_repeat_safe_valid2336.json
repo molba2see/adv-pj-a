@@ -1,0 +1,110 @@
+{
+  "model_dir": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4",
+  "valid_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_numbered/valid.csv",
+  "test_split_used": false,
+  "sample_size": 2336,
+  "valid_size": 2336,
+  "grid": [
+    {
+      "config": {
+        "name": "safe_lp1.0",
+        "num_beams": 4,
+        "length_penalty": 1,
+        "repetition_penalty": 1.03,
+        "no_repeat_ngram_size": 3
+      },
+      "samples": 2336,
+      "metrics": {
+        "gloss_wer": 0.6206,
+        "exact_match": 0.0081,
+        "token_f1": 0.5086,
+        "pred_len": 6.7021,
+        "ref_len": 8.1177
+      },
+      "stability": {
+        "empty_outputs": 0,
+        "triple_repeats": 0,
+        "over_2x_reference": 6,
+        "convention_mismatches": 0
+      },
+      "by_corpus": {
+        "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": {
+          "samples": 96,
+          "gloss_wer": 0.8754,
+          "exact_match": 0.0312,
+          "token_f1": 0.3046,
+          "pred_len": 4.6771,
+          "ref_len": 7.4375
+        },
+        "NIKL_Sign_Language_Parallel_Corpus_2025": {
+          "samples": 2237,
+          "gloss_wer": 0.6102,
+          "exact_match": 0.0072,
+          "token_f1": 0.5176,
+          "pred_len": 6.7792,
+          "ref_len": 8.1319
+        },
+        "재난안전수어영상": {
+          "samples": 3,
+          "gloss_wer": 0.7586,
+          "exact_match": 0,
+          "token_f1": 0.3632,
+          "pred_len": 14,
+          "ref_len": 19.3333
+        }
+      },
+      "elapsed_seconds": 210.9
+    }
+  ],
+  "full_valid": [],
+  "selected": {
+    "config": {
+      "name": "safe_lp1.0",
+      "num_beams": 4,
+      "length_penalty": 1,
+      "repetition_penalty": 1.03,
+      "no_repeat_ngram_size": 3
+    },
+    "samples": 2336,
+    "metrics": {
+      "gloss_wer": 0.6206,
+      "exact_match": 0.0081,
+      "token_f1": 0.5086,
+      "pred_len": 6.7021,
+      "ref_len": 8.1177
+    },
+    "stability": {
+      "empty_outputs": 0,
+      "triple_repeats": 0,
+      "over_2x_reference": 6,
+      "convention_mismatches": 0
+    },
+    "by_corpus": {
+      "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": {
+        "samples": 96,
+        "gloss_wer": 0.8754,
+        "exact_match": 0.0312,
+        "token_f1": 0.3046,
+        "pred_len": 4.6771,
+        "ref_len": 7.4375
+      },
+      "NIKL_Sign_Language_Parallel_Corpus_2025": {
+        "samples": 2237,
+        "gloss_wer": 0.6102,
+        "exact_match": 0.0072,
+        "token_f1": 0.5176,
+        "pred_len": 6.7792,
+        "ref_len": 8.1319
+      },
+      "재난안전수어영상": {
+        "samples": 3,
+        "gloss_wer": 0.7586,
+        "exact_match": 0,
+        "token_f1": 0.3632,
+        "pred_len": 14,
+        "ref_len": 19.3333
+      }
+    },
+    "elapsed_seconds": 210.9
+  }
+}

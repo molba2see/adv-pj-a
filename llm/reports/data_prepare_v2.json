@@ -1,0 +1,59 @@
+{
+  "source_files_are_read_only": true,
+  "sources": [
+    {
+      "requested": "external_data/한국수어 주석 말뭉치 2024/processed_2024",
+      "selected": "external_data/한국수어 주석 말뭉치 2024/processed_2024/samples.jsonl",
+      "rows": 956
+    },
+    {
+      "requested": "external_data/한국어-한국수어 병렬 말뭉치 2025/NIKL_Sign Language Parallel Corpus_2025_말뭉치",
+      "selected": "external_data/한국어-한국수어 병렬 말뭉치 2025/NIKL_Sign Language Parallel Corpus_2025_말뭉치",
+      "rows": 23534
+    },
+    {
+      "requested": "external_data/재난안전수어영상",
+      "selected": "external_data/재난안전수어영상/processed_gloss/samples.jsonl",
+      "rows": 27
+    },
+    {
+      "requested": "external_data/GKSL/GKSL3k_original.csv",
+      "selected": "external_data/GKSL/GKSL3k_original.csv",
+      "rows": 3052
+    }
+  ],
+  "input_rows": 27569,
+  "unique_rows": 27027,
+  "exact_duplicates_removed": 542,
+  "generated_rows": 0,
+  "split_counts": {
+    "train": 21649,
+    "valid": 2576,
+    "test": 2802
+  },
+  "split_group_intersections": {
+    "train_valid": 0,
+    "train_test": 0,
+    "valid_test": 0
+  },
+  "conflicting_text_groups": 273,
+  "label_type_counts": {
+    "human_annotation": 27027
+  },
+  "corpus_counts": {
+    "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 896,
+    "NIKL_Sign_Language_Parallel_Corpus_2025": 23534,
+    "재난안전수어영상": 27,
+    "KETI-Emergency": 105,
+    "NIA-2020": 1520,
+    "KETI-Airport": 395,
+    "KETI-Daily": 550
+  },
+  "gloss_convention_counts": {
+    "nikl_numbered": 24457,
+    "gksl_unnumbered": 2570
+  },
+  "seed": 42,
+  "valid_ratio": 0.1,
+  "test_ratio": 0.1
+}

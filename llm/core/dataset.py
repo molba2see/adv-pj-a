@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from retriever import (
+from core.retriever import (
     ExampleRetriever,
     GlossLexicon,
     GrammarRetriever,
@@ -75,12 +75,23 @@ def load_dataframe(cfg_data) -> pd.DataFrame:
     if missing:
         raise ValueError(f"컬럼 누락: {missing} / 실제 컬럼: {list(df.columns)}")
 
-    df = df[[c for c in (cfg_data.id_col, cfg_data.text_col, cfg_data.gloss_col) if c in df.columns]]
+    provenance_cols = (
+        "source_corpus", "gloss_convention", "source_file", "source_record_id",
+        "label_type", "split_group", "grammar_focus_tags", "sampling_origin"
+    )
+    df = df[[
+        c for c in (cfg_data.id_col, cfg_data.text_col, cfg_data.gloss_col, *provenance_cols)
+        if c in df.columns
+    ]]
     df = df.rename(columns={cfg_data.text_col: "text", cfg_data.gloss_col: "gloss"})
     if cfg_data.id_col in df.columns:
         df = df.rename(columns={cfg_data.id_col: "file_id"})
     else:
         df["file_id"] = [f"auto{i:07d}" for i in range(len(df))]
+    if "source_corpus" not in df.columns:
+        df["source_corpus"] = "unspecified"
+    if "gloss_convention" not in df.columns:
+        df["gloss_convention"] = "unknown"
 
     df["text"] = df["text"].str.strip()
     df["gloss"] = df["gloss"].str.strip()
@@ -147,7 +158,7 @@ def build_rag(cfg, train_df: pd.DataFrame) -> RagContextBuilder:
 
     if rcfg.mode in ("lexicon", "full"):
         print("[rag] 글로스 사전 구축 중...")
-        lexicon = GlossLexicon(min_count=1).build(pairs)
+        lexicon = GlossLexicon(min_count=rcfg.lexicon_min_count).build(pairs)
         print(f"[rag]   표제어 {len(lexicon.stem2gloss)}개")
 
     if rcfg.mode in ("example", "full"):
@@ -170,10 +181,28 @@ def build_rag(cfg, train_df: pd.DataFrame) -> RagContextBuilder:
     return RagContextBuilder(rcfg, lexicon, example_ret, grammar_ret)
 
 
-def augment(df: pd.DataFrame, builder: RagContextBuilder, is_train: bool) -> pd.DataFrame:
+def input_tag(row, mode: str) -> str:
+    if mode == "none":
+        return ""
+    if mode not in {"corpus", "gloss_convention"}:
+        raise ValueError(f"지원하지 않는 input_tag: {mode}")
+    value = str(row.get(mode, "unknown") or "unknown").strip()
+    return f"[{mode}={value}] "
+
+
+def augment(
+    df: pd.DataFrame,
+    builder: RagContextBuilder,
+    is_train: bool,
+    input_tag_mode: str = "none",
+) -> pd.DataFrame:
     out = df.copy()
     out["source"] = [
-        builder.build(t, is_train=is_train) for t in df["text"].tolist()
+        input_tag(row, input_tag_mode)
+        + builder.build(
+            row["text"], is_train=is_train, target_gloss=row["gloss"]
+        )
+        for _, row in df.iterrows()
     ]
     out["target"] = out["gloss"]
     return out
@@ -216,29 +245,56 @@ def collect_gloss_vocab(df: pd.DataFrame, min_freq: int) -> list[str]:
 # ----------------------------------------------------------------------------
 # 캐시
 # ----------------------------------------------------------------------------
+def _file_digest(path) -> str | None:
+    if path is None:
+        return None
+    path = Path(path)
+    if not path.is_file():
+        return f"missing:{path.resolve()}"
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def cache_key(cfg) -> str:
     r = cfg.rag
     raw = json.dumps(
         {
+            # v3: NFKC-normalized text/gloss and the current augmentation schema.
+            "cache_schema": 4,
             "mode": r.mode, "retriever": r.retriever, "kg": r.top_k_grammar,
             "ke": r.top_k_example, "lex": r.max_lexicon_items,
+            "lex_min": r.lexicon_min_count,
             "lim": r.grammar_char_limit, "min": r.min_score,
             "maxex": r.max_example_score, "gqm": r.grammar_query_mode,
-            "feat": r.include_feature_tags,
-            "train": str(cfg.data.train_file), "seed": cfg.data.seed,
+            "feat": r.include_feature_tags, "dense_model": r.dense_model,
+            "tfidf_ngram": tuple(r.tfidf_ngram),
+            "task_prefix": r.task_prefix, "markers": [r.lex_marker, r.ex_marker, r.feat_marker, r.gram_marker],
+            "train": _file_digest(cfg.data.train_file),
+            "valid": _file_digest(cfg.data.valid_file),
+            "test": _file_digest(cfg.data.test_file),
+            "grammar": _file_digest(r.grammar_chunks) if r.mode in ("grammar", "full") else None,
+            "seed": cfg.data.seed,
+            "input_tag": cfg.data.input_tag,
         },
         sort_keys=True,
     )
     return hashlib.md5(raw.encode()).hexdigest()[:10]
 
 
-def prepare_splits(cfg, cache_dir: Path = Path("data/cache")):
+def prepare_splits(
+    cfg,
+    cache_dir: Path = Path("data/cache"),
+    force_rebuild: bool = False,
+):
     """캐시가 있으면 읽고, 없으면 RAG 증강 후 저장한다."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     key = cache_key(cfg)
     paths = {s: cache_dir / f"{s}_{key}.parquet" for s in ("train", "valid", "test")}
 
-    if all(p.exists() for p in paths.values()):
+    if not force_rebuild and all(p.exists() for p in paths.values()):
         print(f"[data] 캐시 사용: {key}")
         return {s: pd.read_parquet(p) for s, p in paths.items()}
 
@@ -247,9 +303,9 @@ def prepare_splits(cfg, cache_dir: Path = Path("data/cache")):
     builder = build_rag(cfg, train)
 
     splits = {
-        "train": augment(train, builder, is_train=True),
-        "valid": augment(valid, builder, is_train=False),
-        "test": augment(test, builder, is_train=False),
+        "train": augment(train, builder, is_train=True, input_tag_mode=cfg.data.input_tag),
+        "valid": augment(valid, builder, is_train=False, input_tag_mode=cfg.data.input_tag),
+        "test": augment(test, builder, is_train=False, input_tag_mode=cfg.data.input_tag),
     }
     for s, p in paths.items():
         splits[s].to_parquet(p, index=False)

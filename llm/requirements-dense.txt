@@ -1,0 +1,2 @@
+# Optional semantic retrieval; default TF-IDF does not need this.
+sentence-transformers>=2.6,<6

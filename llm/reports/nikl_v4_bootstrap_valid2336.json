@@ -1,0 +1,42 @@
+{
+  "samples": 2336,
+  "bootstrap_iterations": 10000,
+  "seed": 42,
+  "delta_definition": "candidate_minus_baseline",
+  "metrics": {
+    "wer_delta": {
+      "observed": -0.000896,
+      "bootstrap_95ci": [
+        -0.004253,
+        0.002408
+      ],
+      "improvement_probability": 0.7078,
+      "direction": "lower_is_better"
+    },
+    "exact_delta": {
+      "observed": 0.001712,
+      "bootstrap_95ci": [
+        -0.000428,
+        0.004281
+      ],
+      "improvement_probability": 0.8956,
+      "direction": "higher_is_better"
+    },
+    "token_f1_delta": {
+      "observed": 0.002235,
+      "bootstrap_95ci": [
+        -0.000676,
+        0.005178
+      ],
+      "improvement_probability": 0.9365,
+      "direction": "higher_is_better"
+    }
+  },
+  "improved_groups_by_token_f1": 432,
+  "regressed_groups_by_token_f1": 357,
+  "tied_groups_by_token_f1": 1547,
+  "primary_token_f1_improvement_supported": false,
+  "baseline": "outputs/pko_t5_base_ksl_v2_nikl_weighted_adapter_v1/repeat_safe_general_valid_full/sample_safe_lp1.0.tsv",
+  "candidate": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/repeat_safe_general_valid_full/sample_safe_lp1.0.tsv",
+  "test_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_numbered/valid.csv"
+}

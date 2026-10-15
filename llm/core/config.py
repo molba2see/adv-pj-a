@@ -21,6 +21,8 @@ class DataConfig:
     text_col: str = "korean_text"
     gloss_col: str = "gloss_sequence"
     id_col: str = "file_id"
+    # none | corpus | gloss_convention. 검색 전에 붙여 출력 표기 체계를 제어한다.
+    input_tag: str = "none"
 
     # 같은 문장이 여러 file_id로 중복 등장하는 경우가 많음 -> 분할 전에 문장 기준 중복 제거
     dedup_by_text: bool = True
@@ -30,11 +32,11 @@ class DataConfig:
 
 @dataclass
 class RagConfig:
-    grammar_chunks: Path = Path("data/grammar_chunks.jsonl")
+    grammar_chunks: Path = Path("resources/grammar_chunks.jsonl")
 
     # none | lexicon | example | grammar | full
     # 반드시 none 과 비교(ablation)해 보고 쓸 것. 작은 모델에서는 노이즈가 손해일 수 있다.
-    mode: str = "full"
+    mode: str = "none"
 
     # --- 검색기 ---
     # "tfidf"  : sklearn char n-gram TF-IDF (다운로드 불필요, 강력한 베이스라인)
@@ -46,6 +48,7 @@ class RagConfig:
     top_k_grammar: int = 1        # 문법 규칙 청크 개수
     top_k_example: int = 2        # 유사 학습 예시 개수
     max_lexicon_items: int = 12   # 사전 힌트 최대 개수
+    lexicon_min_count: int = 2    # 한 번뿐인 우연한 정렬 및 정답 누수 완화
 
     grammar_char_limit: int = 220  # 청크를 이 길이로 잘라 넣는다 (입력 예산 보호)
     min_score: float = 0.10        # 이 점수 미만이면 검색 결과를 버린다
@@ -68,7 +71,7 @@ class RagConfig:
 
 @dataclass
 class ModelConfig:
-    model_name: str = "KETI-AIR/ke-t5-small"
+    model_name: str = "paust/pko-t5-base"
     max_source_length: int = 384   # RAG 컨텍스트 포함 길이
     # 128로 둔다. 64에서는 실제 데이터의 일부(최대 77토큰)가 잘려 정답이 손실됐다.
     max_target_length: int = 128
@@ -82,12 +85,13 @@ class ModelConfig:
 
 @dataclass
 class TrainConfig:
-    output_dir: Path = Path("outputs/ket5-small-ksl")
-    num_train_epochs: float = 30.0
-    per_device_train_batch_size: int = 16
-    per_device_eval_batch_size: int = 32
-    gradient_accumulation_steps: int = 1
-    learning_rate: float = 3e-4        # T5 계열은 1e-4 ~ 5e-4가 적당 (3e-5는 너무 낮다)
+    output_dir: Path = Path("outputs/pko-t5-base-ksl")
+    num_train_epochs: float = 8.0
+    per_device_train_batch_size: int = 1
+    per_device_eval_batch_size: int = 2
+    gradient_accumulation_steps: int = 16
+    # V4에서는 LoRA와 lm_head에 서로 다른 학습률을 적용한다. 이 값은 LoRA용이다.
+    learning_rate: float = 1e-4
     weight_decay: float = 0.01
     warmup_ratio: float = 0.06
     label_smoothing_factor: float = 0.0
@@ -101,8 +105,11 @@ class TrainConfig:
     save_steps: int = 200
     logging_steps: int = 50
     save_total_limit: int = 2
-    metric_for_best_model: str = "eval_gloss_wer"
-    greater_is_better: bool = False
+    # WER만 사용하면 모든 토큰을 삭제한 짧은 붕괴 출력도 약 1.0을 받아,
+    # 일부 정답 gloss를 학습한 긴 예측(WER>1)을 이기는 역전이 생길 수 있다.
+    # 체크포인트 선택/조기종료는 token-F1을 사용하고 WER은 별도로 보고한다.
+    metric_for_best_model: str = "eval_token_f1"
+    greater_is_better: bool = True
     early_stopping_patience: int = 5
     seed: int = 42
 

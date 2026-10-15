@@ -1,0 +1,48 @@
+{
+  "predictions": "outputs/pko_t5_base_ksl_v2_gksl_adapter_v1/test_predictions.tsv",
+  "test_file": "training_data/ksl_unified_raw_human_v2_by_convention/gksl_unnumbered/test.csv",
+  "unique_input_evaluation": true,
+  "multi_reference_groups": 23,
+  "overall": {
+    "samples": 142,
+    "gloss_wer": 0.4602,
+    "exact_match": 0.3028,
+    "token_f1": 0.6589,
+    "pred_len": 2.9577,
+    "ref_len": 3.2746
+  },
+  "by_corpus": {
+    "KETI-Airport": {
+      "samples": 13,
+      "gloss_wer": 0.463,
+      "exact_match": 0.3846,
+      "token_f1": 0.6223,
+      "pred_len": 3.6154,
+      "ref_len": 4.1538
+    },
+    "KETI-Daily": {
+      "samples": 58,
+      "gloss_wer": 0.4828,
+      "exact_match": 0.2759,
+      "token_f1": 0.6672,
+      "pred_len": 3.1034,
+      "ref_len": 3.5
+    },
+    "KETI-Emergency": {
+      "samples": 8,
+      "gloss_wer": 0.4595,
+      "exact_match": 0,
+      "token_f1": 0.6391,
+      "pred_len": 3.875,
+      "ref_len": 4.625
+    },
+    "NIA-2020": {
+      "samples": 63,
+      "gloss_wer": 0.4327,
+      "exact_match": 0.3492,
+      "token_f1": 0.6615,
+      "pred_len": 2.5714,
+      "ref_len": 2.7143
+    }
+  }
+}

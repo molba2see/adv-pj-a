@@ -1,0 +1,97 @@
+{
+  "decision_date": "2026-08-21",
+  "task": "Korean text to NIKL numbered KSL gloss",
+  "decision": "promote_existing_v4_as_unified_nikl_route",
+  "selected_model": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4",
+  "replaced_general_model": "outputs/pko_t5_base_ksl_v2_nikl_weighted_adapter_v1",
+  "routes": {
+    "2024": "pko_t5_base_ksl_nikl_2024_adapter_v4",
+    "2025": "pko_t5_base_ksl_nikl_2024_adapter_v4",
+    "default": "nikl",
+    "nikl": "pko_t5_base_ksl_nikl_2024_adapter_v4",
+    "gksl": "pko_t5_base_ksl_v2_gksl_adapter_v1"
+  },
+  "architecture": {
+    "translation_rag_mode": "none",
+    "explanation_mode": "separate_grammar_rag",
+    "grammar_chunks": 814,
+    "evidence_used_for_translation": false,
+    "service_integration": false
+  },
+  "decode": {
+    "preset": "repeat_safe",
+    "num_beams": 4,
+    "length_penalty": 1,
+    "repetition_penalty": 1.03,
+    "no_repeat_ngram_size": 3
+  },
+  "mixed_test_700": {
+    "candidate_v4": {
+      "gloss_wer": 0.6413,
+      "exact_match": 0.0143,
+      "token_f1": 0.4903,
+      "empty_outputs": 0,
+      "triple_repeats": 0
+    },
+    "baseline_v2": {
+      "gloss_wer": 0.6485,
+      "exact_match": 0.0086,
+      "token_f1": 0.4852,
+      "empty_outputs": 0,
+      "triple_repeats": 0
+    },
+    "paired_bootstrap_unique_groups": 695,
+    "wer_delta_candidate_minus_baseline": -0.007383,
+    "wer_delta_95ci": [
+      -0.013205,
+      -0.001457
+    ],
+    "token_f1_delta_candidate_minus_baseline": 0.004158,
+    "token_f1_delta_95ci": [
+      -0.001662,
+      0.010368
+    ]
+  },
+  "full_validation_2336": {
+    "candidate_v4": {
+      "gloss_wer": 0.6206,
+      "exact_match": 0.0081,
+      "token_f1": 0.5086,
+      "nikl_2024_token_f1": 0.3046,
+      "nikl_2025_token_f1": 0.5176,
+      "empty_outputs": 0,
+      "triple_repeats": 0
+    },
+    "baseline_v2": {
+      "gloss_wer": 0.6215,
+      "exact_match": 0.0064,
+      "token_f1": 0.5064,
+      "nikl_2024_token_f1": 0.284,
+      "nikl_2025_token_f1": 0.5161,
+      "empty_outputs": 0,
+      "triple_repeats": 0
+    },
+    "token_f1_delta_candidate_minus_baseline": 0.002235,
+    "token_f1_delta_95ci": [
+      -0.000676,
+      0.005178
+    ]
+  },
+  "selection_rationale": [
+    "v4 improves all three aggregate point metrics on both evaluation splits.",
+    "The mixed-test WER and exact-match gains exclude zero under paired bootstrap.",
+    "NIKL 2024 improves materially while NIKL 2025 does not regress in point estimates.",
+    "One unified route is simpler than maintaining separate 2024 and 2025 defaults."
+  ],
+  "limitations": [
+    "The token-F1 confidence interval crosses zero on both evaluations, so the gain is modest rather than conclusive.",
+    "The disaster corpus has only two test and three validation samples and cannot support a routing decision.",
+    "Grammar evidence explains detected sentence-level phenomena; it does not prove individual Korean-to-gloss lexical mappings."
+  ],
+  "artifacts": {
+    "mixed_test_report": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/repeat_safe_general_700/decoding_tuning_report.json",
+    "mixed_test_bootstrap": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/paired_bootstrap_general700_vs_v2.json",
+    "full_validation_report": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/repeat_safe_general_valid_full/decoding_tuning_report.json",
+    "full_validation_bootstrap": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/paired_bootstrap_general_valid_full_vs_v2.json"
+  }
+}

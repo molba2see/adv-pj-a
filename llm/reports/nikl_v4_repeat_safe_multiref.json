@@ -1,0 +1,24 @@
+{
+  "predictions": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4/repeat_safe_test/sample_safe_lp1.0.tsv",
+  "test_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_2024/test.csv",
+  "unique_input_evaluation": true,
+  "multi_reference_groups": 2,
+  "overall": {
+    "samples": 85,
+    "gloss_wer": 0.8435,
+    "exact_match": 0.0588,
+    "token_f1": 0.3173,
+    "pred_len": 4.7765,
+    "ref_len": 7.7412
+  },
+  "by_corpus": {
+    "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": {
+      "samples": 85,
+      "gloss_wer": 0.8435,
+      "exact_match": 0.0588,
+      "token_f1": 0.3173,
+      "pred_len": 4.7765,
+      "ref_len": 7.7412
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# Local model weights, corpora, derived labels and RAG source text
+/base_model/
+/outputs/
+/training_data/
+/data/
+/resources/
+grammar_chunks.jsonl
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.onnx
+*.mp4
+*.avi
+*.mov
+*.npz
+*.npy
+*.eaf
+*.zip
+*.tar
+*.gz
+*.parquet
+*.arrow
+# CSV/TSV/JSONL exports may contain corpus text.
+*.csv
+*.tsv
+*.jsonl
+# Only hand-authored format fixtures are public.
+!examples/schema_example.csv
+!examples/grammar_schema_example.jsonl
+# Runtime and local credentials
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+*.log
+/cache/

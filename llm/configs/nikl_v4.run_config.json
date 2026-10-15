@@ -1,0 +1,74 @@
+{
+  "run_config_version": 2,
+  "model_name": "paust/pko-t5-base",
+  "use_lora": true,
+  "max_source_length": 384,
+  "max_target_length": 128,
+  "add_gloss_tokens": false,
+  "untie_word_embeddings": false,
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "q",
+      "k",
+      "v",
+      "o",
+      "wi_0",
+      "wi_1",
+      "wo"
+    ],
+    "train_lm_head": true
+  },
+  "training": {
+    "num_train_epochs": 3,
+    "per_device_train_batch_size": 2,
+    "per_device_eval_batch_size": 2,
+    "gradient_accumulation_steps": 8,
+    "metric_for_best_model": "eval_token_f1",
+    "greater_is_better": true,
+    "learning_rate": 0.00003,
+    "lm_head_learning_rate": 0.000003,
+    "corpus_balance": "none",
+    "corpus_balance_max_multiplier": 8,
+    "eval_steps": 44,
+    "save_steps": 44,
+    "logging_steps": 20,
+    "max_eval_samples": 200
+  },
+  "data": {
+    "train_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_2024/train.csv",
+    "valid_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_2024/valid.csv",
+    "test_file": "training_data/ksl_unified_group_balanced_v4_subsets/nikl_2024/test.csv",
+    "valid_ratio": 0.05,
+    "test_ratio": 0.05,
+    "seed": 42,
+    "explicit_splits": true,
+    "input_tag": "gloss_convention"
+  },
+  "rag": {
+    "mode": "none",
+    "retriever": "tfidf",
+    "dense_model": "jhgan/ko-sroberta-multitask",
+    "tfidf_ngram": [
+      2,
+      4
+    ],
+    "top_k_grammar": 1,
+    "top_k_example": 2,
+    "max_lexicon_items": 12,
+    "lexicon_min_count": 2,
+    "grammar_char_limit": 220,
+    "min_score": 0.1,
+    "max_example_score": 0.95,
+    "grammar_query_mode": "feature",
+    "include_feature_tags": true,
+    "task_prefix": "한국어를 한국수어 글로스로 변환: ",
+    "lex_marker": " | 사전: ",
+    "ex_marker": " | 예시: ",
+    "feat_marker": " | 자질: ",
+    "gram_marker": " | 문법: ",
+    "grammar_chunks": "grammar_chunks.jsonl"
+  }
+}

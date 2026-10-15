@@ -1,0 +1,2 @@
+file_id,korean_text,gloss_sequence,source_corpus,gloss_convention,source_file,source_record_id,label_type,split_group
+schema-only-1,학교에 갑니다.,학교1 가다1,synthetic_schema_example,nikl_numbered,synthetic,schema-only-1,generated_schema_example,example-group

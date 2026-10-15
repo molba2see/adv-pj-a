@@ -1,0 +1,6 @@
+# CPU-only data/routing/regression tests; no model download needed.
+pytest>=8,<9
+pandas>=2,<3
+numpy>=1.24,<3
+scikit-learn>=1.3,<2
+sacrebleu>=2.4,<3

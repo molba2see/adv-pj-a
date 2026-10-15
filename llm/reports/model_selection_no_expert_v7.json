@@ -1,0 +1,69 @@
+{
+  "decision_date": "2026-08-22",
+  "review_authority": "automatic_metrics_only_no_expert",
+  "decision": "keep_existing_v4_routes",
+  "selected_model": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4",
+  "experiments": {
+    "v6_low_lr_nikl_consolidation_step400": {
+      "candidate": "outputs/pko_t5_base_ksl_nikl_consolidated_v6/checkpoint-400",
+      "human_targets_only": true,
+      "generated_labels": false,
+      "test_700": {
+        "baseline_v4": {
+          "wer": 0.6413,
+          "exact": 0.0143,
+          "token_f1": 0.4903
+        },
+        "candidate": {
+          "wer": 0.646,
+          "exact": 0.01,
+          "token_f1": 0.489
+        }
+      },
+      "decision": "reject"
+    },
+    "v7_adapter_interpolation": {
+      "baseline": "outputs/pko_t5_base_ksl_nikl_2024_adapter_v4",
+      "candidate": "outputs/pko_t5_base_ksl_nikl_consolidated_v6/checkpoint-400",
+      "validation_selected_alpha_overall": 0.25,
+      "validation_selected_alpha_2025": 0.5,
+      "overall_test_700_alpha025": {
+        "wer": 0.6427,
+        "exact": 0.0129,
+        "token_f1": 0.4891
+      },
+      "nikl_2025_test_alpha050": {
+        "wer": 0.6164,
+        "exact": 0.0066,
+        "token_f1": 0.5184
+      },
+      "nikl_2025_test_baseline_v4": {
+        "wer": 0.6127,
+        "exact": 0.0082,
+        "token_f1": 0.5179
+      },
+      "decision": "reject_due_to_non_pareto_test_result"
+    },
+    "nikl_2025_decode_tuning": {
+      "validation_rows": 2237,
+      "baseline_repeat_safe": {
+        "wer": 0.6102,
+        "exact": 0.0072,
+        "token_f1": 0.5176
+      },
+      "safe_lp12": {
+        "wer": 0.6121,
+        "exact": 0.008,
+        "token_f1": 0.5176
+      },
+      "safe_lp13": {
+        "wer": 0.6134,
+        "exact": 0.008,
+        "token_f1": 0.5179
+      },
+      "decision": "reject_due_to_wer_regression"
+    }
+  },
+  "routing_changed": false,
+  "reason": "No expert-free candidate improved the locked metrics consistently across validation and test."
+}

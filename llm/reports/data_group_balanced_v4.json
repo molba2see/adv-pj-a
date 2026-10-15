@@ -1,0 +1,118 @@
+{
+  "version": 4,
+  "strategy": "preserve_multi_reference_cap_train_groups",
+  "max_refs_per_train_group": 3,
+  "source_dir": "training_data/ksl_unified_raw_human_v2",
+  "source_files_modified": false,
+  "ai_review_authority": "not_expert",
+  "conflict_groups": 273,
+  "provisional_multi_reference_groups": 271,
+  "cross_convention_groups": 1,
+  "excluded_repeated_variants": 2,
+  "splits": {
+    "train": {
+      "source_rows": 21649,
+      "output_rows": 21037,
+      "training_rows_removed": 612,
+      "capped_groups": 163,
+      "heldout_core_unchanged": true
+    },
+    "valid": {
+      "source_rows": 2576,
+      "output_rows": 2576,
+      "training_rows_removed": 0,
+      "capped_groups": 0,
+      "heldout_core_unchanged": true
+    },
+    "test": {
+      "source_rows": 2802,
+      "output_rows": 2802,
+      "training_rows_removed": 0,
+      "capped_groups": 0,
+      "heldout_core_unchanged": true
+    }
+  },
+  "subsets": {
+    "nikl_numbered": {
+      "train": {
+        "rows": 19559,
+        "corpora": {
+          "NIKL_Sign_Language_Parallel_Corpus_2025": 18832,
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 705,
+          "재난안전수어영상": 22
+        }
+      },
+      "valid": {
+        "rows": 2336,
+        "corpora": {
+          "NIKL_Sign_Language_Parallel_Corpus_2025": 2237,
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 96,
+          "재난안전수어영상": 3
+        }
+      },
+      "test": {
+        "rows": 2557,
+        "corpora": {
+          "NIKL_Sign_Language_Parallel_Corpus_2025": 2465,
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 90,
+          "재난안전수어영상": 2
+        }
+      }
+    },
+    "gksl_unnumbered": {
+      "train": {
+        "rows": 1478,
+        "corpora": {
+          "NIA-2020": 713,
+          "KETI-Daily": 442,
+          "KETI-Airport": 241,
+          "KETI-Emergency": 82
+        }
+      },
+      "valid": {
+        "rows": 240,
+        "corpora": {
+          "NIA-2020": 140,
+          "KETI-Daily": 50,
+          "KETI-Airport": 35,
+          "KETI-Emergency": 15
+        }
+      },
+      "test": {
+        "rows": 245,
+        "corpora": {
+          "NIA-2020": 144,
+          "KETI-Daily": 58,
+          "KETI-Airport": 35,
+          "KETI-Emergency": 8
+        }
+      }
+    },
+    "nikl_2024": {
+      "train": {
+        "rows": 705,
+        "corpora": {
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 705
+        }
+      },
+      "valid": {
+        "rows": 96,
+        "corpora": {
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 96
+        }
+      },
+      "test": {
+        "rows": 90,
+        "corpora": {
+          "NIKL_Korean_Sign_Language_Annotated_Corpus_2024": 90
+        }
+      }
+    }
+  },
+  "split_group_intersections": {
+    "train_valid": 0,
+    "train_test": 0,
+    "valid_test": 0
+  },
+  "subset_root": "training_data/ksl_unified_group_balanced_v4_subsets"
+}

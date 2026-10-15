@@ -56,10 +56,14 @@ class GlossLexicon:
     매칭하도록 `_stems()` 를 교체하면 정확도가 올라간다.
     """
 
-    def __init__(self, min_count: int = 2, min_stem_len: int = 2):
+    def __init__(self, min_count: int = 2, min_stem_len: int = 2, min_confidence: float = 0.8):
+        if not 0.0 < min_confidence <= 1.0:
+            raise ValueError("min_confidence는 0과 1 사이여야 합니다.")
         self.min_count = min_count
         self.min_stem_len = min_stem_len
+        self.min_confidence = min_confidence
         self.stem2gloss: dict[str, list[tuple[str, int]]] = {}
+        self._counter: dict[str, Counter] = {}
         self._stem_list: list[str] = []
 
     # --- 교체 지점: 형태소 분석기를 쓰려면 여기만 바꾸면 된다 ---
@@ -67,42 +71,74 @@ class GlossLexicon:
     def _stems(text: str) -> set[str]:
         return set(RE_HANGUL.findall(text))
 
+    def _contributions(self, text: str, gloss: str):
+        """Yield this pair's contribution so train-time leave-one-out is possible."""
+        plain = RE_GLOSS_DECOR.sub("", text)
+        for g in gloss_tokens(gloss):
+            stem = normalize_gloss_token(g)
+            if len(stem) < self.min_stem_len:
+                continue
+            if stem in plain:
+                yield stem, g, 1.0
+            elif len(stem) >= 2 and stem[:2] in plain:
+                yield stem, g, 0.3
+
+    def _refresh(self) -> None:
+        self.stem2gloss = {}
+        for stem, cnt in self._counter.items():
+            total = sum(cnt.values())
+            values = [
+                (gloss, int(count))
+                for gloss, count in cnt.most_common()
+                if count >= self.min_count and count / total >= self.min_confidence
+            ]
+            if values:
+                self.stem2gloss[stem] = values
+        self._stem_list = sorted(self.stem2gloss, key=len, reverse=True)
+
     def build(self, pairs: list[tuple[str, str]]) -> "GlossLexicon":
         counter: dict[str, Counter] = defaultdict(Counter)
         for text, gloss in pairs:
-            plain = RE_GLOSS_DECOR.sub("", text)
-            for g in gloss_tokens(gloss):
-                stem = normalize_gloss_token(g)
-                if len(stem) < self.min_stem_len:
-                    continue
-                # 표제어가 문장 안에 그대로 나타나면 정렬로 간주
-                if stem in plain:
-                    counter[stem][g] += 1
-                else:
-                    # 어미 변화 대응: 앞 2글자만 일치해도 약한 근거로 인정
-                    if len(stem) >= 2 and stem[:2] in plain:
-                        counter[stem][g] += 0.3  # type: ignore[assignment]
-
-        self.stem2gloss = {
-            stem: [(g, int(c)) for g, c in cnt.most_common() if c >= self.min_count]
-            for stem, cnt in counter.items()
-        }
-        self.stem2gloss = {k: v for k, v in self.stem2gloss.items() if v}
-        # 긴 표제어부터 매칭 (최장일치)
-        self._stem_list = sorted(self.stem2gloss, key=len, reverse=True)
+            for stem, g, weight in self._contributions(text, gloss):
+                counter[stem][g] += weight
+        self._counter = dict(counter)
+        self._refresh()
         return self
 
-    def lookup(self, text: str, max_items: int = 12) -> list[tuple[str, str]]:
+    def lookup(
+        self,
+        text: str,
+        max_items: int = 12,
+        exclude_gloss: str | None = None,
+    ) -> list[tuple[str, str]]:
         """문장에 등장하는 표제어들의 (표제어, 대표 글로스)를 문장 순서대로 반환."""
+        if exclude_gloss and not self._counter:
+            # A legacy lexicon loaded from disk has no per-pair counts, so a
+            # safe leave-one-out calculation is impossible. Do not leak it.
+            return []
         plain = RE_GLOSS_DECOR.sub("", text)
+        excluded: dict[str, Counter] = defaultdict(Counter)
+        if exclude_gloss:
+            for stem, gloss, weight in self._contributions(text, exclude_gloss):
+                excluded[stem][gloss] += weight
         hits, covered = [], [False] * len(plain)
         for stem in self._stem_list:
+            choices = []
+            if exclude_gloss and stem in self._counter:
+                for gloss, count in self._counter[stem].most_common():
+                    remaining = count - excluded[stem][gloss]
+                    if remaining >= self.min_count:
+                        choices.append((gloss, remaining))
+            else:
+                choices = self.stem2gloss.get(stem, [])
+            if not choices:
+                continue
             idx = plain.find(stem)
             while idx != -1:
                 if not any(covered[idx: idx + len(stem)]):
                     for i in range(idx, idx + len(stem)):
                         covered[i] = True
-                    hits.append((idx, stem, self.stem2gloss[stem][0][0]))
+                    hits.append((idx, stem, choices[0][0]))
                     break
                 idx = plain.find(stem, idx + 1)
             if len(hits) >= max_items * 2:
@@ -309,11 +345,21 @@ class GrammarFeatureExtractor:
          "문장구조 이어진문장 접속표지"),
     ]
 
+    # ``-세요``는 명령형에 쓰이지만 고정 인사말에도 나타난다. 표면 부분문자열만
+    # 보고 인사말을 명령/청유로 분류하지 않도록 문장 단위 예외를 둔다.
+    COMMAND_GREETING_EXCEPTIONS = re.compile(
+        r"(?:^|\s)(?:안녕하세요|안녕하십니까)(?:\s|[,.!?]|$)"
+    )
+
     @classmethod
     def extract(cls, text: str) -> tuple[list[str], str]:
         """(감지된 자질명 목록, 문법서 검색 질의) 반환."""
         feats, terms = [], []
         for name, pat, query_terms in cls.RULES:
+            if name == "명령청유" and cls.COMMAND_GREETING_EXCEPTIONS.search(text):
+                command_text = cls.COMMAND_GREETING_EXCEPTIONS.sub(" ", text)
+                if not pat.search(command_text):
+                    continue
             if pat.search(text):
                 feats.append(name)
                 terms.append(query_terms)
@@ -324,6 +370,8 @@ class GrammarFeatureExtractor:
 
 @dataclass
 class GrammarHit:
+    chunk_id: str
+    page: int | str | None
     text: str
     chapter: str
     section: str
@@ -360,7 +408,10 @@ class GrammarRetriever:
         if query_mode == "surface":
             q = query
         else:
-            _, feat_q = GrammarFeatureExtractor.extract(query)
+            features, feat_q = GrammarFeatureExtractor.extract(query)
+            if query_mode == "feature" and not features:
+                # 자질 신호 없이 일반 키워드로 검색하면 무관 청크가 근거처럼 노출된다.
+                return []
             q = feat_q if query_mode == "feature" else f"{feat_q} {query}"
 
         out = []
@@ -369,8 +420,15 @@ class GrammarRetriever:
                 continue
             c = self.chunks[i]
             out.append(
-                GrammarHit(c["text"], c.get("chapter", ""), c.get("section", ""),
-                           c.get("heading", ""), s)
+                GrammarHit(
+                    c.get("chunk_id", ""),
+                    c.get("page"),
+                    c["text"],
+                    c.get("chapter", ""),
+                    c.get("section", ""),
+                    c.get("heading", ""),
+                    s,
+                )
             )
         return out
 
@@ -387,12 +445,34 @@ class RagContextBuilder:
         self.example_ret = example_ret
         self.grammar_ret = grammar_ret
 
-    def build(self, text: str, is_train: bool = False) -> str:
+    def build(
+        self,
+        text: str,
+        is_train: bool = False,
+        target_gloss: str | None = None,
+    ) -> str:
+        return self.build_structured(
+            text, is_train=is_train, target_gloss=target_gloss
+        )["source"]
+
+    def build_structured(
+        self,
+        text: str,
+        is_train: bool = False,
+        target_gloss: str | None = None,
+    ) -> dict:
+        """Build model input and return the exact grammar evidence used."""
         c = self.cfg
         parts = [c.task_prefix + text.strip()]
+        features: list[str] = []
+        grammar_hits: list[GrammarHit] = []
 
         if c.mode == "none":
-            return parts[0]
+            return {
+                "source": parts[0],
+                "grammar_features": features,
+                "grammar_hits": grammar_hits,
+            }
 
         use_lex = c.mode in ("lexicon", "full")
         use_ex = c.mode in ("example", "full")
@@ -400,7 +480,11 @@ class RagContextBuilder:
 
         # (1) 사전 힌트 — 가장 신호가 강하므로 앞쪽에 배치
         if use_lex and self.lexicon is not None:
-            hits = self.lexicon.lookup(text, c.max_lexicon_items)
+            hits = self.lexicon.lookup(
+                text,
+                c.max_lexicon_items,
+                exclude_gloss=target_gloss if is_train else None,
+            )
             if hits:
                 parts.append(c.lex_marker + " ".join(f"{s}={g}" for s, g in hits))
 
@@ -420,22 +504,26 @@ class RagContextBuilder:
 
         # (3) 문법 자질 태그 — 짧지만 신호가 분명해서 비용 대비 효율이 좋다
         if use_gram:
-            feats, _ = GrammarFeatureExtractor.extract(text)
-            if feats and c.include_feature_tags:
-                parts.append(c.feat_marker + " ".join(feats))
+            features, _ = GrammarFeatureExtractor.extract(text)
+            if features and c.include_feature_tags:
+                parts.append(c.feat_marker + " ".join(features))
 
         # (4) 문법 규칙 본문 — 길어서 맨 뒤 + 길이 제한
         if use_gram and self.grammar_ret is not None and c.top_k_grammar > 0:
-            gr = self.grammar_ret.search(
+            grammar_hits = self.grammar_ret.search(
                 text, c.top_k_grammar, min_score=c.min_score,
                 query_mode=c.grammar_query_mode,
             )
-            if gr:
+            if grammar_hits:
                 snips = []
-                for h in gr:
+                for h in grammar_hits:
                     body = " ".join(h.text.split())[: c.grammar_char_limit]
                     label = h.section or h.heading
                     snips.append(f"({label}) {body}" if label else body)
                 parts.append(c.gram_marker + " ".join(snips))
 
-        return "".join(parts)
+        return {
+            "source": "".join(parts),
+            "grammar_features": features,
+            "grammar_hits": grammar_hits,
+        }
