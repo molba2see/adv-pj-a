@@ -1,16 +1,19 @@
 # 데이터 출처와 스키마
 
-## 확보한 자료
+## NIKL 출처와 공개 범위
 
-- 국립국어원 한국수어 주석 말뭉치 2024: 초기 파일명 `NIKL_Korean_Sign_Language_Annotated_Corpus_2024_v1.1.zip`
-- 국립국어원 한국어-한국수어 병렬 말뭉치 2025: 초기 파일명 `NIKL_Sign_Language_Parallel_Corpus_2025_v1.0_da9.zip`, 이후 추가 2025 원시 JSON 포함
-- 재난안전수어영상: 프로젝트에서 준비한 `processed_gloss/samples.jsonl`
-- GKSL3k: `GKSL3k_original.csv`, dataset 열에 KETI-Emergency/NIA-2020/KETI-Airport/KETI-Daily 보존
+**NIKL 출처는 [국립국어원 모두의 말뭉치](https://kli.korean.go.kr/corpus/)의 「한국수어-한국어 병렬 말뭉치」입니다.** 이 프로젝트는 2024·2025 자료를 처리했습니다.
 
-NIKL 배포 자료는 [모두의 말뭉치](https://kli.korean.go.kr/corpus/)에서 확인합니다.
-GKSL3k CSV의 원 배포 URL·버전, 재난안전의 정확한 배포 ID·이용조건은 ZIP에 충분히
-기록되어 있지 않습니다. NIA/KETI라는 corpus 이름만으로 특정 배포판/라이선스를 추정하지 않습니다.
-외부 데이터를 공유할 때 제공기관의 이용조건을 확인하세요.
+원본 데이터, 원문 한국어 문장–Gloss 쌍, 원본을 복원할 수 있는 행 단위 가공 자료는 공개하지 않습니다. 공개 범위는 처리 코드·입출력 스키마·정규화/중복 제거/문장 그룹 분할 절차·설정·집계 통계입니다. 문서에 실제 말뭉치 예문을 옮기거나 원본 파일을 첨부하지 않습니다.
+
+## 로컬 입력과 내부 식별자
+
+- NIKL 2024/2025: 위 「한국수어-한국어 병렬 말뭉치」를 제공기관에서 별도로 확보해 로컬 입력으로 사용합니다.
+- 과거 파일명·코드·집계의 `NIKL_Korean_Sign_Language_Annotated_Corpus_2024`, `NIKL_Sign_Language_Parallel_Corpus_2025` 등은 실험 당시 내부 식별자입니다. 재현 호환성을 위해 코드는 유지하고, 자료 설명의 출처명은 위 표기로 통일합니다.
+- 재난안전수어영상: 로컬 `processed_gloss/samples.jsonl` 등 원본/가공 자료를 입력합니다. `llm/` 코드 배포본에는 데이터 파일을 포함하지 않습니다.
+- GKSL3k: 로컬 `GKSL3k_original.csv`의 dataset 열에 KETI-Emergency/NIA-2020/KETI-Airport/KETI-Daily 출처를 보존합니다.
+
+GKSL3k의 원 배포 URL·버전과 재난안전의 정확한 배포 ID는 기존 실험 자료에서 확정되지 않았습니다. 출처·조건이 확인되지 않은 자료도 이 저장소를 통해 재배포하지 않습니다.
 
 ## 지원하는 입력
 

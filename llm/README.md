@@ -1,12 +1,15 @@
 # 한국어 → 한국수어(KSL) Gloss
 
 한국어 문장을 한국수어의 gloss 시퀀스로 변환하는 연구 프로젝트입니다.
-국립국어원 2024·2025 말뭉치, 재난안전 자료, GKSL3k의 텍스트 주석을 준비하고,
+NIKL은 **국립국어원 모두의 말뭉치 「한국수어-한국어 병렬 말뭉치」**(2024·2025 자료)를 출처로 합니다.
+재난안전 자료와 GKSL3k의 텍스트 주석도 처리하며,
 `paust/pko-t5-base`에 LoRA와 출력층 학습을 적용했습니다.
 데이터 전처리, 학습, 추론, 문법 RAG, 다중 정답 평가 코드를 제공합니다.
 
 이 디렉터리는 `llm최종.zip`에서 정리한 **코드 배포본**입니다.
+**이 `llm/` 배포본이 공개하는 것은 처리 코드·절차·설정·집계 결과입니다. 원본 데이터, 원문 한국어 문장–Gloss 쌍, 원문을 복원할 수 있는 행 단위 가공 자료를 공개하지 않습니다.**
 원본/가공 말뭉치, 영상·skeleton, 문법 원문 청크, 모델 가중치는 Git에 포함하지 않습니다.
+원본은 제공기관에서 별도로 확보해 로컬에서만 처리합니다.
 실험의 집계 수치와 선택 근거는 [reports](reports/), 설정 기록은 [configs](configs/)에 있습니다.
 
 ## 프로젝트 범위
@@ -77,14 +80,15 @@ llm/
 
 | 원천 | 입력 행 | 중복 제거 후 | 표기/비고 |
 |---|---:|---:|---|
-| 국립국어원 한국수어 주석 말뭉치 2024 | 956 | 896 | NIKL 번호형, processed 메타데이터 |
-| 국립국어원 한국어-한국수어 병렬 말뭉치 2025 | 23,534 | 23,534 | NIKL 번호형, 원시 JSON도 지원 |
+| NIKL 2024 · 한국수어-한국어 병렬 말뭉치 | 956 | 896 | NIKL 번호형, processed 메타데이터 |
+| NIKL 2025 · 한국수어-한국어 병렬 말뭉치 | 23,534 | 23,534 | NIKL 번호형, 원시 JSON도 지원 |
 | 재난안전수어영상 | 27 | 27 | processed_gloss 메타데이터 |
 | GKSL3k | 3,052 | 2,570 | KETI/NIA 출처, 번호 없음 |
 | **합계** | **27,569** | **27,027** | 완전 중복 542행 제거 |
 
-NIKL 자료는 [국립국어원 모두의 말뭉치](https://kli.korean.go.kr/corpus/)에서
-해당 이름과 버전을 확인해 확보합니다. GKSL3k와 재난안전 자료의 상세 배포 식별자 및
+NIKL 자료의 출처는 [국립국어원 모두의 말뭉치](https://kli.korean.go.kr/corpus/)의 **「한국수어-한국어 병렬 말뭉치」**입니다.
+2024·2025 자료의 정확한 배포판은 제공기관에서 확인해 확보합니다.
+코드·과거 집계에 남아 있는 `NIKL_Korean_Sign_Language_Annotated_Corpus_2024` 등의 이름은 내부 식별자이며, 출처 표기는 위 이름으로 통일합니다. GKSL3k와 재난안전 자료의 상세 배포 식별자 및
 문법서 서지정보는 기존 패키지에 완전히 기록되어 있지 않아
 [데이터 문서](docs/DATA.md)에 확인 필요 사항으로 표시했습니다.
 
@@ -121,7 +125,9 @@ CPU 데이터/검색 테스트는 `requirements-dev.txt`만으로 실행할 수 
 
 ## 최종 모델을 로컬에서 사용하기
 
-최종 가중치는 이 저장소에 없습니다. 기존 `llm최종.zip`을 가진 경우 필요한 자원만
+아래 명령의 입력 문장은 문서 설명용으로 직접 만든 합성 예시이며 원본 말뭉치에서 인용하지 않았습니다. 원본 문장·Gloss 쌍을 예시로 공개하지 않습니다.
+
+최종 가중치는 이 `llm/` 배포본에 없습니다. 기존 `llm최종.zip`을 가진 경우 필요한 자원만
 로컬에 복원할 수 있습니다. 복원 도구는 기존 파일을 덮어쓰지 않습니다.
 
 ```bash
@@ -148,7 +154,7 @@ CSV 없이 모델의 원시 출력만 확인:
 ```bash
 python -m inference.run --corpus nikl --repeat_safe \
   --no-explain --no-normalize_convention \
-  --text "공부를 더 많이 해 봐야겠다."
+  --text "파란 우산을 들고 도서관 입구에서 만나자."
 ```
 
 실험 당시처럼 human train 기반 번호 보정과 문법 설명까지 확인:
@@ -157,7 +163,7 @@ python -m inference.run --corpus nikl --repeat_safe \
 python -m inference.run --corpus nikl --repeat_safe \
   --train_file training_data/ksl_unified_group_balanced_v4_subsets/nikl_numbered/train.csv \
   --grammar_chunks resources/grammar_chunks.jsonl \
-  --text "왜 학교에 가지 않았나요?"
+  --text "파란 우산을 들고 도서관 입구에서 만나자."
 ```
 
 `--corpus gksl`은 번호 없는 모델을 선택합니다. 별도 모델 경로는 `--model_dir`,

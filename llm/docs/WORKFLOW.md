@@ -1,5 +1,7 @@
 # 실행 가이드
 
+NIKL 출처는 **국립국어원 모두의 말뭉치 「한국수어-한국어 병렬 말뭉치」**입니다. 원본 데이터·원문 문장–Gloss 쌍은 공개하지 않고 로컬에서만 처리합니다. 아래 `--text` 문장은 문서용 합성 입력이며 원본 말뭉치에서 인용하지 않았습니다.
+
 모든 명령은 저장소의 `llm/` 디렉터리에서 실행합니다.
 한글·공백 경로는 따옴표로 감쌉니다. 설치는 README를 참고하세요.
 
@@ -77,9 +79,9 @@ ZIP에는 모든 중간 초기 어댑터와 optimizer checkpoint가 없어 최�
 
 ```bash
 python -m inference.run --corpus nikl --repeat_safe \
-  --no-explain --no-normalize_convention --text "친구가 없으니 심심하죠."
+  --no-explain --no-normalize_convention --text "파란 우산을 들고 도서관 입구에서 만나자."
 python -m inference.run --corpus gksl \
-  --no-explain --no-normalize_convention --text "집에 불이 났어요."
+  --no-explain --no-normalize_convention --text "파란 우산을 들고 도서관 입구에서 만나자."
 ```
 
 `--models_root`로 두 어댑터의 상위 폴더를 지정하거나 `--model_dir`로 직접 선택합니다.

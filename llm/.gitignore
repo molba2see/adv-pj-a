@@ -39,3 +39,6 @@ venv/
 .env.*
 *.log
 /cache/
+
+# NIKL source inputs are local-only.
+/external_data/

@@ -5,12 +5,14 @@
 - 최종 구현: 로컬 `llm최종.zip` (2026-08-30 패키지)
 - 모델: [paust/pko-t5-base](https://huggingface.co/paust/pko-t5-base)
 - 초기 비교: [AIRC-KETI/ke-t5](https://github.com/AIRC-KETI/ke-t5)
-- NIKL 데이터: [모두의 말뭉치](https://kli.korean.go.kr/corpus/)
+- NIKL 데이터: **국립국어원 모두의 말뭉치 「한국수어-한국어 병렬 말뭉치」**(2024·2025 자료), [공식 제공처](https://kli.korean.go.kr/corpus/)
 
 이번 코드 배포본은 모듈을 core/training/inference/data_processing/evaluation/tests로
 정리하고 서버 절대 경로 이식, 선택적 로컬 자원 복원, CPU 회귀 테스트 환경을 추가했습니다.
 실험의 학습 방식·라우팅·집계 수치는 최종 ZIP에 근거합니다.
-원본/가공 corpus, 문법 원문 청크와 모델 가중치는 Git에 싣지 않습니다.
+공개 범위는 처리 코드·절차·설정·집계 결과입니다. 원본 데이터·원문 한국어 문장–Gloss 쌍·원문을 복원할 수 있는 행 단위 가공 자료는 공개하지 않습니다.
+원본/가공 corpus, 문법 원문 청크와 모델 가중치는 `llm/` 공개 코드 배포본에 싣지 않습니다. 원본은 제공기관에서 별도로 확보해 로컬에서만 처리합니다.
+과거 코드·집계의 NIKL 2024/2025 식별자는 재현 호환성을 위해 유지하며 공식 출처명과 구분합니다.
 
 GKSL3k 원 배포 URL, 재난안전 배포 ID, 문법서 판본·서지정보는 기존 archive에서
 확정할 수 없어 DATA.md에 명시했습니다. 모델과 데이터의 권리는 원 제공자에게 있으며
