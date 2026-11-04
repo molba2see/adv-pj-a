@@ -1,0 +1,8 @@
+{
+  "description": "문법 설명 계층 검증 (자질 감지 정확도 + 근거 검색 건전성). heuristic_proxy, 전문가 검수 아님.",
+  "authority": "heuristic_proxy_not_expert",
+  "feature_detection_recall": 0.9,
+  "evidence_retrieval_recall": 1.0,
+  "improvement": "정규식 보강 전 recall 0.67 -> 0.90, 근거 검색 0.90 -> 1.0. -세요? 의문형 오탐 수정.",
+  "note": "설명 계층은 번역과 분리(evidence_used_for_translation=false). 근거에 문법서 항목·페이지·내용 요약을 함께 제공."
+}

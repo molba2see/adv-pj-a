@@ -238,6 +238,71 @@ repeat-safe는 beam 4, length penalty 1.0, repetition penalty 1.03, 3-gram 반�
 실험 과정에서 test를 반복 비교해 모델 선택에도 참고했으므로 완전히 미사용된 최종
 독립 평가로 간주할 수 없습니다. 상세 범위는 [reports/README.md](reports/README.md)에 있습니다.
 
+## v4 이후 추가 개선 (LLM2 라인)
+
+위 "기록된 성능"까지가 기존 배포본의 집계입니다. 이 절은 그 **v4 기준선에서
+출발해 실제로 재학습·재측정한 추가 개선 라인**을 기록합니다. 이 라인은 위
+"실험에서 배운 점과 한계"에 나오는 기존 v5/v6/v7 **기각 후보와는 다른 별개의
+실험**이며, 혼동을 피하기 위해 Step 1~4로 표기합니다. 모든 수치는 같은 NIKL
+일반 700문장 다중 정답 벤치마크(고유 입력 695: NIKL 2025 608 / 2024 85 /
+재난안전 2)에서 **repeat-safe 디코딩**으로 측정했습니다. 집계 JSON은
+[reports/llm2_progression_v4_to_v8.json](reports/llm2_progression_v4_to_v8.json)에
+있고, 가중치·데이터·예측 파일은 공개 정책에 따라 포함하지 않습니다.
+
+| 단계 | 핵심 변경 | Token F1 ↑ | WER ↓ | Exact ↑ | 2024 F1 | 2025 F1 |
+|---|---|---:|---:|---:|---:|---:|
+| v4 (기준선) | NIKL 2024(706행)만 학습 | 0.4934 | 0.6400 | 0.0144 | 0.3181 | 0.5185 |
+| Step 1 | 2025 포함 통합 재학습 (LoRA r16, 2ep) | 0.5384 | 0.6045 | 0.0144 | 0.2636 | 0.5776 |
+| Step 2 | RSLoRA(r32,a64) + 번호 재교정 (1ep) | 0.5649 | 0.5800 | 0.0158 | 0.2862 | 0.6047 |
+| Step 3 | 2024 메타 괄호 전처리 + sqrt 균형 (1ep) | 0.5778 | 0.5731 | 0.0230 | 0.3710 | 0.6071 |
+| **Step 4 (최종)** | 풀 학습 3ep + dropout 0.1 / LR 2e-4 | **0.6162** | **0.5391** | **0.0288** | **0.3920** | **0.6478** |
+
+**v4 → 최종 개선폭**: Token F1 +0.123, WER −0.101, Exact Match 약 2배,
+2024 F1 +0.074, 2025 F1 +0.129.
+
+각 단계의 근거:
+
+- **Step 1 — 데이터 분포를 맞춤.** v4는 NIKL 2024만 학습했지만 벤치마크의 약
+  87%가 NIKL 2025입니다. 2025를 포함한 통합 데이터로 재학습해 전체 F1과 2025
+  F1이 올랐습니다. 단 2024는 전용 학습 효과를 잃어 하락했습니다.
+- **Step 2 — LoRA 변형을 비교해 RSLoRA 채택.** 동일 데이터·1 epoch·valid에서
+  r16 / r32 / RSLoRA / DoRA를 비교했습니다. 단순 rank 상향과 DoRA는 이득이
+  없었고 RSLoRA만 개선했습니다
+  ([reports/llm2_lora_variant_experiments.json](reports/llm2_lora_variant_experiments.json)).
+  디코딩 그리드 탐색은 개선 폭이 측정 노이즈 수준이었습니다.
+- **Step 3 — 2024 약점을 전처리로 보완.** 2024 입력의 약 2/3가 `(오른손의)`,
+  `('제비' 수형)` 같은 수형·화자 메타 주석을 포함해 입력 노이즈가 됐습니다.
+  이 메타 괄호를 정리(gloss는 불변, train의 2024 행만, 원본은 읽기 전용)하고
+  sqrt 코퍼스 균형을 더해 2024 F1을 0.29대에서 0.37로 회복했습니다. 전처리
+  코드는 [data_processing/clean_nikl2024_meta.py](data_processing/clean_nikl2024_meta.py)
+  입니다.
+- **Step 4 — 과적합을 제어하며 풀 학습.** 1 epoch에 수렴 조짐이 보여 단순 epoch
+  증가는 위험했습니다. dropout 0.05→0.1, LoRA LR 3e-4→2e-4로 낮추고 3 epoch +
+  early stopping + best-model 복원을 적용해 과적합 없이 전 지표 최고에
+  도달했습니다.
+
+이 라인은 LoRA·RSLoRA·lm_head 학습만 사용하고 번역은 계속 no-RAG입니다.
+수치는 bag-of-gloss token F1과 WER이며 전문가 검수 수어 정확도를 직접 주장하지
+않습니다. 벤치마크 700건은 실험 중 반복 참조한 집합이므로 완전히 미사용된 독립
+test로 간주하지 않습니다.
+
+### 문법 설명 계층 개선
+
+번역과 분리된 문법 설명 계층(`--explain`,
+`evidence_used_for_translation=false`)도 함께 다듬었습니다. 입력의 문법 자질
+감지 정규식을 보강해 라벨 문장 기준 자질 감지 recall이 0.67에서 0.90으로, 근거
+검색 recall이 0.90에서 1.0으로 올랐고, `-세요?` 의문형을 명령으로 오분류하던
+문제를 고쳤습니다. 설명에는 문법서 항목·페이지뿐 아니라 그 항목이 다루는 내용
+요약을 함께 제공합니다. 검증 스크립트는
+[evaluation/validate_explanation.py](evaluation/validate_explanation.py)이며
+판정 권한은 전문가 검수가 아닌 `heuristic_proxy_not_expert`로 고정했습니다
+([reports/llm2_explanation_validation.json](reports/llm2_explanation_validation.json)).
+
+> 예시 (최종 모델, 합성 입력):
+> 입력 `친구가 같이 가자고 말했어요.` → gloss `친구1 함께1 가다1 말하다1`,
+> 자질 `명령청유, 인용`, 근거 `3.4. 청유문 (p.175)` — "청유문은 화자와 청자가
+> 함께 하도록 요청하는 문장 유형… 시선응시·고개 숙이기 등 비수지표지로 실현".
+
 ## 실험에서 배운 점과 한계
 
 - 초기 KE-T5는 `지시1`, `먹다1`, `동점을` 반복 등 출력 붕괴를 보였습니다.

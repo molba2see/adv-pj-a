@@ -1,0 +1,160 @@
+{
+  "description": "v4 이후 LLM2 추가 개선 라인의 집계 수치. NIKL 일반 700문장 다중정답 벤치마크, repeat_safe 디코딩.",
+  "benchmark": "nikl_general_700_multiref (695 unique inputs: nikl_2025 608 / nikl_2024 85 / disaster 2)",
+  "decoding": "repeat_safe (beam 4, length_penalty 1.0, repetition_penalty 1.03, no_repeat_ngram 3)",
+  "note": "이 수치는 LLM2 작업에서 실제 재학습/재측정한 결과이며, 기존 reports의 ZIP 집계와 별도 라인입니다. 전문가 수어 정확도를 직접 주장하지 않습니다.",
+  "steps": {
+    "v4_baseline": {
+      "change": "기준선: NIKL 2024(706행)만 학습한 어댑터",
+      "metrics": {
+        "overall": {
+          "token_f1": 0.4934,
+          "gloss_wer": 0.64,
+          "exact_match": 0.0144,
+          "pred_len": 6.4892,
+          "ref_len": 7.9223
+        },
+        "by_corpus": {
+          "nikl_2024": {
+            "token_f1": 0.3181,
+            "gloss_wer": 0.8389,
+            "samples": 85
+          },
+          "nikl_2025": {
+            "token_f1": 0.5185,
+            "gloss_wer": 0.6124,
+            "samples": 608
+          },
+          "disaster": {
+            "token_f1": 0.3353,
+            "gloss_wer": 0.7143,
+            "samples": 2
+          }
+        }
+      }
+    },
+    "step1_unify2025": {
+      "change": "2025 포함 통합 nikl_numbered(19,560행) 재학습 (LoRA r16, 2ep)",
+      "metrics": {
+        "overall": {
+          "token_f1": 0.5384,
+          "gloss_wer": 0.6045,
+          "exact_match": 0.0144,
+          "pred_len": 6.7669,
+          "ref_len": 7.9209
+        },
+        "by_corpus": {
+          "nikl_2024": {
+            "token_f1": 0.2636,
+            "gloss_wer": 0.9117,
+            "samples": 85
+          },
+          "nikl_2025": {
+            "token_f1": 0.5776,
+            "gloss_wer": 0.5616,
+            "samples": 608
+          },
+          "disaster": {
+            "token_f1": 0.3,
+            "gloss_wer": 0.7857,
+            "samples": 2
+          }
+        }
+      }
+    },
+    "step2_rslora": {
+      "change": "RSLoRA(r32,a64) 채택 + 번호 재교정 후처리 (1ep)",
+      "metrics": {
+        "overall": {
+          "token_f1": 0.5649,
+          "gloss_wer": 0.58,
+          "exact_match": 0.0158,
+          "pred_len": 6.8676,
+          "ref_len": 7.9209
+        },
+        "by_corpus": {
+          "nikl_2024": {
+            "token_f1": 0.2862,
+            "gloss_wer": 0.8782,
+            "samples": 85
+          },
+          "nikl_2025": {
+            "token_f1": 0.6047,
+            "gloss_wer": 0.5382,
+            "samples": 608
+          },
+          "disaster": {
+            "token_f1": 0.3011,
+            "gloss_wer": 0.7857,
+            "samples": 2
+          }
+        }
+      }
+    },
+    "step3_clean2024_balance": {
+      "change": "NIKL 2024 메타 괄호 전처리 + sqrt 코퍼스 균형 (1ep)",
+      "metrics": {
+        "overall": {
+          "token_f1": 0.5778,
+          "gloss_wer": 0.5731,
+          "exact_match": 0.023,
+          "pred_len": 6.9741,
+          "ref_len": 7.9209
+        },
+        "by_corpus": {
+          "nikl_2024": {
+            "token_f1": 0.371,
+            "gloss_wer": 0.8615,
+            "samples": 85
+          },
+          "nikl_2025": {
+            "token_f1": 0.6071,
+            "gloss_wer": 0.533,
+            "samples": 608
+          },
+          "disaster": {
+            "token_f1": 0.4575,
+            "gloss_wer": 0.7143,
+            "samples": 2
+          }
+        }
+      }
+    },
+    "step4_full_v8": {
+      "change": "풀 학습 3ep + dropout 0.1 / LR 2e-4 (과적합 제어) — 최종 v8",
+      "metrics": {
+        "overall": {
+          "token_f1": 0.6162,
+          "gloss_wer": 0.5391,
+          "exact_match": 0.0288,
+          "pred_len": 7.2072,
+          "ref_len": 7.9209
+        },
+        "by_corpus": {
+          "nikl_2024": {
+            "token_f1": 0.392,
+            "gloss_wer": 0.8447,
+            "samples": 85
+          },
+          "nikl_2025": {
+            "token_f1": 0.6478,
+            "gloss_wer": 0.4971,
+            "samples": 608
+          },
+          "disaster": {
+            "token_f1": 0.5278,
+            "gloss_wer": 0.6071,
+            "samples": 2
+          }
+        }
+      }
+    }
+  },
+  "final_gain_v4_to_v8": {
+    "token_f1": 0.1228,
+    "gloss_wer": -0.1009,
+    "exact_match": 0.0144,
+    "nikl_2024_token_f1": 0.0739,
+    "nikl_2025_token_f1": 0.1293
+  }
+}
