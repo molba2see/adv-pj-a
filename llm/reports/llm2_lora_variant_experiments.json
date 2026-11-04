@@ -1,0 +1,27 @@
+{
+  "description": "v4 이후 LoRA 변형 실험 (동일 데이터·1epoch·valid 비교). RSLoRA만 채택.",
+  "metric": "eval_token_f1 (valid best, max_eval_samples 400 층화표본)",
+  "experiments": {
+    "r16_baseline_2ep": {
+      "config": "r16, a32",
+      "valid_best_f1": 0.5514,
+      "verdict": "기준"
+    },
+    "r32_plain": {
+      "config": "r32, a64 (rslora 없음)",
+      "valid_best_f1": 0.519,
+      "verdict": "기각 — 단순 rank 상향 효과 없음"
+    },
+    "r32_rslora": {
+      "config": "r32, a64, use_rslora",
+      "valid_best_f1": 0.5733,
+      "verdict": "채택"
+    },
+    "r16_dora": {
+      "config": "r16, a32, use_dora",
+      "valid_best_f1": 0.496,
+      "verdict": "기각 — 최하위 + 학습 2배 느림"
+    }
+  },
+  "note": "단순 rank 상향·DoRA·디코딩 튜닝은 이 태스크에서 이득이 없었고 RSLoRA만 유효했습니다."
+}

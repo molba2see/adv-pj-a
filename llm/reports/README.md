@@ -14,6 +14,16 @@
 - gksl_v1_multiref.json / gksl_v1_by_corpus.json: 다중/단일 참조의 평가 범위 차이
 - nikl_v4_bootstrap_*.json: 짝지은 10,000회 bootstrap
 
+### v4 이후 LLM2 추가 개선 라인 (이번 작업에서 재학습·재측정)
+
+위 보고서들과 달리 아래 3개는 v4 기준선에서 출발해 **이번 작업에서 실제로
+재학습하고 다시 측정한** 집계입니다. 가중치·데이터·예측 파일은 공개 정책에 따라
+포함하지 않습니다.
+
+- llm2_progression_v4_to_v8.json: v4 → Step1~4(최종 v8)의 700문장 벤치마크 전체/코퍼스별 수치
+- llm2_lora_variant_experiments.json: r16/r32/RSLoRA/DoRA valid 비교 (RSLoRA만 채택)
+- llm2_explanation_validation.json: 문법 설명 자질 감지·근거 검색 검증 (heuristic_proxy)
+
 단일 정답 평가는 행 단위, 다중 정답 평가는 정규화 문장별 고유 입력 단위입니다.
 보고서의 raw WER와 F1은 0~1에 제한되지 않는 WER/0~1 F1이며 정확도 백분율이 아닙니다.
 F1은 bag-of-gloss 평균이고 어순은 WER로 함께 봅니다.
